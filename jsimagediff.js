@@ -34,39 +34,64 @@ var jsImageDiff = function (args) {
     var totalPixelCount;
     var diffPixelCount;
 
+    var ImgWrapper = function (source) {
+        var self = this;
+        var img;
+
+        // Takes an arg and will return true if arg is reference to a <img>
+        var isImgTag = function (arg) {
+            var retVal = false;
+
+            if (arg === typeof Object) {
+                if (arg.nodeName === "IMG") {
+                    retVal = true;
+                }
+            }
+
+            return retVal;
+        };
+
+        var init = function (source) {
+            if (isImgTag(source)) {
+                // Is an <img> tag, add to images
+                img = source;
+            } else if (typeof source === "string") {
+                // Should be URL, try to make an <img> tag and add
+                var newImg = new Image();
+                newImg.src = source;
+                img = newImg;
+            } else {
+                // Couldn't match, just swallow the error for now
+            }
+        };
+
+        var getImg = function () {
+            return img;
+        };
+
+        self.getImg = getImg;
+        init(source);
+    };
+
     var parseArgs = function (args) {
         // Parse the source images; if they are <img> do nothing, otherwise put them in them.
         var imgs = args.imgs;
         for (var i = 0; i < imgs.length; i++) {
-            if (isImgTag(imgs[i])) {
-                // Is an <img> tag, add to images
-                sourceImages.push(imgs[i])
-            } else if (typeof imgs[i] === "string") {
-                // Should be URL, try to make an <img> tag and add
-                var newImg = new Image();
-                newImg.src = imgs[i];
-                sourceImages.push(newImg);
-            } else {
-                // Couldn't match, just swallow the error for now
-            }
+            //            if (isImgTag(imgs[i])) {
+            //                // Is an <img> tag, add to images
+            //                sourceImages.push(imgs[i])
+            //            } else if (typeof imgs[i] === "string") {
+            //                // Should be URL, try to make an <img> tag and add
+            //                var newImg = new Image();
+            //                newImg.src = imgs[i];
+            //                sourceImages.push(newImg);
+            //            } else {
+            //                // Couldn't match, just swallow the error for now
+            //            }
+            sourceImages.push(new ImgWrapper(imgs[i]));
         }
 
     };
-
-    // Takes an arg and will return true if arg is reference to a <img>
-    var isImgTag = function (arg) {
-        var retVal = false;
-
-        if (arg === typeof Object) {
-            if (arg.nodeName === "IMG") {
-                retVal = true;
-            }
-        }
-
-        return retVal;
-    };
-
-
 
     var diff = function () {
 
@@ -74,18 +99,18 @@ var jsImageDiff = function (args) {
         // Get images
         //var img1 = new Image();
         //img1.src = img1URL;
-        var img1 = sourceImages[0];
+        var img1 = sourceImages[0].getImg();
 
         //var img2 = new Image();
         //img2.src = img2URL;
-        var img2 = sourceImages[1];
+        var img2 = sourceImages[1].getImg();
 
 
         // Create canvases offscreen
         // var
         canvasImg1 = document.createElement("canvas");
         canvasImg1.width = img1.naturalWidth;
-        canvasImg1.height = img1.naturalHeight; 
+        canvasImg1.height = img1.naturalHeight;
         var ctxImg1 = canvasImg1.getContext("2d");
         ctxImg1.drawImage(img1, 0, 0);
 
