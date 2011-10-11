@@ -37,6 +37,7 @@ var jsImageDiff = function (args) {
     var ImgWrapper = function (source) {
         var self = this;
         var img;
+        var ctx;
 
         // Takes an arg and will return true if arg is reference to a <img>
         var isImgTag = function (arg) {
@@ -51,7 +52,7 @@ var jsImageDiff = function (args) {
             return retVal;
         };
 
-        var init = function (source) {
+        var createImgTag = function (source) {
             if (isImgTag(source)) {
                 // Is an <img> tag, add to images
                 img = source;
@@ -65,65 +66,46 @@ var jsImageDiff = function (args) {
             }
         };
 
-        var getImg = function () {
-            return img;
+        var createCanvas = function () {
+            var canvas = document.createElement("canvas");
+            canvas.width = img.naturalWidth;
+            canvas.height = img.naturalHeight;
+            ctx = canvas.getContext("2d");
+            ctx.drawImage(img, 0, 0);
         };
 
-        self.getImg = getImg;
-        init(source);
+        var getCtx = function () {
+            return ctx;
+        };
+
+        var getImgData = function () {
+            var imgData = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
+            return imgData.data;
+        };
+
+        createImgTag(source);
+        createCanvas();
+        self.getCtx = getCtx;
+        self.getImgData = getImgData;
     };
 
     var parseArgs = function (args) {
         // Parse the source images; if they are <img> do nothing, otherwise put them in them.
         var imgs = args.imgs;
         for (var i = 0; i < imgs.length; i++) {
-            //            if (isImgTag(imgs[i])) {
-            //                // Is an <img> tag, add to images
-            //                sourceImages.push(imgs[i])
-            //            } else if (typeof imgs[i] === "string") {
-            //                // Should be URL, try to make an <img> tag and add
-            //                var newImg = new Image();
-            //                newImg.src = imgs[i];
-            //                sourceImages.push(newImg);
-            //            } else {
-            //                // Couldn't match, just swallow the error for now
-            //            }
             sourceImages.push(new ImgWrapper(imgs[i]));
         }
 
     };
 
     var diff = function () {
-
-
         // Get images
-        //var img1 = new Image();
-        //img1.src = img1URL;
-        var img1 = sourceImages[0].getImg();
-
-        //var img2 = new Image();
-        //img2.src = img2URL;
-        var img2 = sourceImages[1].getImg();
-
-
-        // Create canvases offscreen
-        // var
-        canvasImg1 = document.createElement("canvas");
-        canvasImg1.width = img1.naturalWidth;
-        canvasImg1.height = img1.naturalHeight;
-        var ctxImg1 = canvasImg1.getContext("2d");
-        ctxImg1.drawImage(img1, 0, 0);
-
-        // var
-        canvasImg2 = document.createElement("canvas");
-        canvasImg2.width = img2.naturalWidth;
-        canvasImg2.height = img2.naturalHeight;
-        var ctxImg2 = canvasImg2.getContext("2d");
-        ctxImg2.drawImage(img2, 0, 0);
+        var img1 = sourceImages[0].getCtx();
+        var img2 = sourceImages[1].getCtx();
 
         // Create diff canvas
-        var newWidth = (img1.naturalWidth > img2.naturalWidth) ? img1.naturalWidth : img2.naturalWidth;
-        var newHeight = (img1.naturalHeight > img2.naturalHeight) ? img1.naturalHeight : img2.naturalHeight;
+        var newWidth = (img1.canvas.width > img2.canvas.width) ? img1.canvas.width : img2.canvas.width;
+        var newHeight = (img1.canvas.height > img2.canvas.height) ? img1.canvas.height : img2.canvas.height;
 
         // var
         canvasDiff = document.createElement("canvas");
@@ -132,11 +114,8 @@ var jsImageDiff = function (args) {
         var ctxDiff = canvasDiff.getContext("2d");
 
         // Get the pixel data for the images
-        var img1Data = ctxImg1.getImageData(0, 0, ctxImg1.canvas.width, ctxImg1.canvas.height);
-        var img1Pixels = img1Data.data;
-
-        var img2Data = ctxImg2.getImageData(0, 0, ctxImg2.canvas.width, ctxImg2.canvas.height);
-        var img2Pixels = img2Data.data;
+        var img1Pixels = sourceImages[0].getImgData();
+        var img2Pixels = sourceImages[1].getImgData();
 
         var imgDiffData = ctxDiff.createImageData(ctxDiff.canvas.width, ctxDiff.canvas.height);
         var imgDiffPixels = imgDiffData.data;
@@ -192,8 +171,7 @@ var jsImageDiff = function (args) {
 
     // Return output
     var retVal = {};
-    retVal.sourceCanvas1 = canvasImg1;
-    retVal.sourceCanvas2 = canvasImg2;
+    retVal.sourceImages = sourceImages;
     retVal.diffCanvas = canvasDiff;
     retVal.totalPixels = totalPixelCount;
     retVal.numPixelsDifferent = diffPixelCount;
