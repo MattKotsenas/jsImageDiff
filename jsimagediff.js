@@ -28,8 +28,6 @@ var jsImageDiff = function (args) {
     var self = this;
     var sourceImages = [];
 
-    var canvasImg1;
-    var canvasImg2;
     var ctxDiff;
     var totalPixelCount;
     var diffPixelCount;
