@@ -10,10 +10,20 @@ How do I use it?
 First, include the library in your page like this:
 `<script type="text/javascript" src="jsimagediff.js"></script>`
 
-Then pass an argument bag with _imgs_ as the key, and an array of images as the value.
-`jsImageDiff.diff({"imgs": ["http://example.com/img1.jpg", document.getElementById("img2"), "http://example.com/img3.png"]});`
+Then pass an argument bag with _imgs_ as the key, an array of images as the value, and a callback to execute when the diff is finished.
+`jsImageDiff.diff({imgs: ["http://example.com/img1.jpg", document.getElementById("img2"), "http://example.com/img3.png"]}, callback: callbackFunction);`
 
 jsImageDiff can take URLs or DOM references to images.
+
+When your callback is executed, you'll get a single parameter, that parameter is a object-literal with the following structure:
+
+`{
+	sourceImages: [], // Array of 'ImgWrappers' of the original images
+	diffCanvas: <canvas>, // Canvas object representing the diff of all the images; any pixel that differs between any of the canvases is replaced with red (255,0,0)
+	totalPixels: <int>, // Total number of pixels in the diff image, the diff image is the height of the tallest image and width of the widest image
+	numPixelsDifferent: <int>, // The number of pixels different (red) in the diff image
+	percentImageDifferent: <float> // (diffPixelCount / totalPixelCount) * 100
+}`
 
 FAQ
 ---

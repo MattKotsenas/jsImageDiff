@@ -1,4 +1,4 @@
-"use strict";
+//"use strict";
 
 /*
 Copyright (C) 2011 by Matt Kotsenas
@@ -22,15 +22,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-/*
-args.imgs = ["img1", "img2", document.getElementById("foo")]
-*/
-
 var jsImageDiff = (function (document, window) {
 
     var jsImageDiff = jsImageDiff || {};
 
-    var ImgWrapper = function (source) {
+    var ImgWrapper = function (source, resolvedCallback) {
         var self = this;
         var img;
         var ctx;
@@ -48,13 +44,26 @@ var jsImageDiff = (function (document, window) {
             return retVal;
         };
 
-        var createImgTag = function (source) {
+        // Creates an <img> tag for the passed in image or URL. If the image is already a tag, make a new one.
+        // We have to make a new tag because the image may not have finished loading yet, so if we go to check the width / height
+        // we'll get 0. We could try to attach an onload handler to the already loading image, but that could create a
+        // race condition between checking if loading is done and attaching the event handler.
+        var createImgTag = function (source, resolvedCallback) {
+            var newImg = new Image();
+
+            // We need to wrap the callback in a callback because our createCanvas function also relies on the image being loaded.
+            var callback = function () {
+                createCanvas();
+                resolvedCallback();
+            };
+
             if (isImgTag(source)) {
-                // Is an <img> tag, add to images
-                img = source;
+                newImg.onload = callback;
+                newImg.src = source.src;
+                img = newImg;
             } else if (typeof source === "string") {
                 // Should be URL, try to make an <img> tag and add
-                var newImg = new Image();
+                newImg.onload = callback;
                 newImg.src = source;
                 img = newImg;
             } else {
@@ -79,8 +88,7 @@ var jsImageDiff = (function (document, window) {
             return imgData.data;
         };
 
-        createImgTag(source);
-        createCanvas();
+        createImgTag(source, resolvedCallback);
         self.getCtx = getCtx;
         self.getImgData = getImgData;
     };
@@ -89,15 +97,33 @@ var jsImageDiff = (function (document, window) {
         var self = this;
         var sourceImages = [];
 
+        var callback;
+        var imgsResolvedCount;
+        var totalImgs;
+
         var ctxDiff;
         var totalPixelCount;
         var diffPixelCount;
 
+        var resolveImgs = function () {
+            imgsResolvedCount += 1;
+
+            if (imgsResolvedCount === totalImgs) {
+                diff2();
+            }
+        };
+
         var parseArgs = function (args) {
+            callback = args.callback || (function () { }); // Set an empty callback function if one isn't supplied.
+
             // Parse the source images; if they are <img> do nothing, otherwise put them in them.
             var imgs = args.imgs;
+
+            imgsResolvedCount = 0;
+            totalImgs = imgs.length;
+
             for (var i = 0; i < imgs.length; i++) {
-                sourceImages.push(new ImgWrapper(imgs[i]));
+                sourceImages.push(new ImgWrapper(imgs[i], resolveImgs));
             }
 
         };
@@ -164,23 +190,27 @@ var jsImageDiff = (function (document, window) {
 
                     diffPixelCount++;
                 }
-
-                // Create diff image 
-                ctxDiff.putImageData(imgDiffData, 0, 0);
             }
+
+            // Create diff image 
+            ctxDiff.putImageData(imgDiffData, 0, 0);
+
+            returnOutput();
         };
 
         parseArgs(args);
-        diff2();
 
-        // Return output
-        var retVal = {};
-        retVal.sourceImages = sourceImages;
-        retVal.diffCanvas = canvasDiff;
-        retVal.totalPixels = totalPixelCount;
-        retVal.numPixelsDifferent = diffPixelCount;
-        retVal.percentageImageDifferent = (diffPixelCount / totalPixelCount) * 100;
-        return retVal;
+        var returnOutput = function () {
+            var retVal = {};
+            retVal.sourceImages = sourceImages;
+            retVal.diffCanvas = canvasDiff;
+            retVal.totalPixels = totalPixelCount;
+            retVal.numPixelsDifferent = diffPixelCount;
+            retVal.percentageImageDifferent = (diffPixelCount / totalPixelCount) * 100;
+
+            // Return final results back to the original, user-supplied callback
+            callback(retVal);
+        }
     };
 
     return jsImageDiff;
