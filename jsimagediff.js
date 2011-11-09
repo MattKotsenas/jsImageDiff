@@ -26,7 +26,10 @@ var jsImageDiff = (function (document, window) {
 
     var jsImageDiff = jsImageDiff || {};
 
-    var ImgWrapper = function (source, resolvedCallback) {
+    //
+    // ImgWrapper - Async wrapper that holds a source image and calls the callback when the image is loaded.
+    //
+    var ImgWrapper = function (source, callback) {
         var self = this;
         var img;
         var ctx;
@@ -48,14 +51,8 @@ var jsImageDiff = (function (document, window) {
         // We have to make a new tag because the image may not have finished loading yet, so if we go to check the width / height
         // we'll get 0. We could try to attach an onload handler to the already loading image, but that could create a
         // race condition between checking if loading is done and attaching the event handler.
-        var createImgTag = function (source, resolvedCallback) {
+        var createImgTag = function (source, callback) {
             var newImg = new Image();
-
-            // We need to wrap the callback in a callback because our createCanvas function also relies on the image being loaded.
-            var callback = function () {
-                createCanvas();
-                resolvedCallback();
-            };
 
             if (isImgTag(source)) {
                 newImg.onload = callback;
@@ -63,7 +60,8 @@ var jsImageDiff = (function (document, window) {
                 img = newImg;
             } else if (typeof source === "string") {
                 // Should be URL, try to make an <img> tag and add
-                newImg.onload = callback;
+                // We need to wrap the callback in another callback because our createCanvas function also relies on the image being loaded.
+                newImg.onload = function () { createCanvas(); callback(); }
                 newImg.src = source;
                 img = newImg;
             } else {
@@ -88,10 +86,11 @@ var jsImageDiff = (function (document, window) {
             return imgData.data;
         };
 
-        createImgTag(source, resolvedCallback);
+        createImgTag(source, callback);
         self.getCtx = getCtx;
         self.getImgData = getImgData;
     };
+    //----- ImgWrapper -----
 
     jsImageDiff.diff = function (args) {
         var self = this;
