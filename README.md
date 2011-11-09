@@ -8,16 +8,19 @@ jsImageDiff is a client-side library for 2-way image diffing, with n-way support
 How do I use it?
 ----------------
 First, include the library in your page like this:
+
 ```javascript
 <script type="text/javascript" src="jsimagediff.js"></script>
 ```
 
 Then pass an argument bag with two keys:
-1. _imgs_ - An array of same-origin images.
-1. _callback_ - A callback function to execute when the diff is finished. This function will have access to the results of the diff.
+1. _imgs_ An array of same-origin images.
+1. _callback_ A callback function to execute when the diff is finished. This function will have access to the results of the diff.
+
 ```javascript
 jsImageDiff.diff({imgs: ["http://example.com/img1.jpg", document.getElementById("img2"), "http://example.com/img3.png"], callback: callbackFunction});
 ```
+
 jsImageDiff can take URLs or DOM references to images.
 
 When your callback is executed, you'll get a single parameter; that parameter is a object-literal with the following structure:
@@ -35,5 +38,5 @@ When your callback is executed, you'll get a single parameter; that parameter is
 FAQ
 ---
 
-	### Why do I get an error like: SCRIPT5022: DOM Exception: SECURITY_ERR (18) (or something similar) ###
-jsImage diff uses the getImageData() API in HTML5 Canvas. For security reasons, Canvas won't allow JavaScript to write a cross-domain image and read the pixel data back out. If you need to read cross-domain content, you'll have to do the usual tricks. See http://stackoverflow.com/questions/4672643/html5-canvas-getimagedata-and-same-origin-policy for some additional info.
+### Why do I get an error like: SCRIPT5022: DOM Exception: SECURITY_ERR (18) (or something similar) ###
+jsImageDiff uses the getImageData() API in HTML5 Canvas. For security reasons, Canvas won't allow JavaScript to write a cross-domain image and read the pixel data back out. If you need to read cross-domain content, you'll have to do the usual tricks. See http://stackoverflow.com/questions/4672643/html5-canvas-getimagedata-and-same-origin-policy for some additional info.
