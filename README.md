@@ -9,7 +9,7 @@ How do I use it?
 ----------------
 First, include the library in your page like this:
 
-```javascript
+```html
 <script type="text/javascript" src="jsimagediff.js"></script>
 ```
 
