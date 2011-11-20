@@ -61,7 +61,7 @@ var jsImageDiff = (function (document, window) {
             } else if (typeof source === "string") {
                 // Should be URL, try to make an <img> tag and add
                 // We need to wrap the callback in another callback because our createCanvas function also relies on the image being loaded.
-                newImg.onload = function () { createCanvas(); callback(); }
+                newImg.onload = function () { createCanvas(); callback(); };
                 newImg.src = source;
                 img = newImg;
             } else {
@@ -116,6 +116,7 @@ var jsImageDiff = (function (document, window) {
             callback = args.callback || (function () { }); // Set an empty callback function if one isn't supplied.
 
             // Parse the source images; if they are <img> do nothing, otherwise put them in them.
+            if (args.imgs.length < 2) { throw "You must supply at least two images to compare."; }
             var imgs = args.imgs;
 
             imgsResolvedCount = 0;
@@ -143,8 +144,10 @@ var jsImageDiff = (function (document, window) {
             var ctxDiff = canvasDiff.getContext("2d");
 
             // Get the pixel data for the images
-            var img1Pixels = sourceImages[0].getImgData();
-            var img2Pixels = sourceImages[1].getImgData();
+            //var img1Pixels = sourceImages[0].getImgData();
+            //var img2Pixels = sourceImages[1].getImgData();
+            var imgPixels = [];
+            sourceImages.forEach(function (img) { imgPixels.push(img.getImgData()); });
 
             var imgDiffData = ctxDiff.createImageData(ctxDiff.canvas.width, ctxDiff.canvas.height);
             var imgDiffPixels = imgDiffData.data;
@@ -157,21 +160,43 @@ var jsImageDiff = (function (document, window) {
             // i += 4 because the pixel array splits each pixel into rgba, so i[0] = red, i[1] = green, i[2] = blue, and i[3] = alpha
             for (var i = 0; i < imgDiffPixels.length; i += 4) {
                 try {
-                    var img1r = img1Pixels[i + 0];
-                    var img1g = img1Pixels[i + 1];
-                    var img1b = img1Pixels[i + 2];
-                    var img1a = img1Pixels[i + 3];
+                    //                    var img1r = img1Pixels[i + 0];
+                    //                    var img1g = img1Pixels[i + 1];
+                    //                    var img1b = img1Pixels[i + 2];
+                    //                    var img1a = img1Pixels[i + 3];
 
-                    var img2r = img2Pixels[i + 0];
-                    var img2g = img2Pixels[i + 1];
-                    var img2b = img2Pixels[i + 2];
-                    var img2a = img2Pixels[i + 3];
+                    //                    var img2r = img2Pixels[i + 0];
+                    //                    var img2g = img2Pixels[i + 1];
+                    //                    var img2b = img2Pixels[i + 2];
+                    //                    var img2a = img2Pixels[i + 3];
 
-                    if ((img1r === img2r) && (img1g === img2g) && (img1b === img2b) && (img1a === img2a)) {
-                        imgDiffData.data[i + 0] = img1r;
-                        imgDiffData.data[i + 1] = img1g;
-                        imgDiffData.data[i + 2] = img1b;
-                        imgDiffData.data[i + 3] = img1a;
+                    var isEqual = true;
+
+                    // We compare all the other images to the first image. Which image we pick is our "base" image doesn't matter
+                    // because we require them ALL to be equal.
+                    var imgR = imgPixels[0][i + 0];
+                    var imgG = imgPixels[0][i + 1];
+                    var imgB = imgPixels[0][i + 2];
+                    var imgA = imgPixels[0][i + 3];
+
+                    // Start 'j' at 1 because we're using 0 as our base, so we can safely skip comparing with ourselves.
+                    for (var j = 1; j < imgPixels.length; j++) {
+                        // First check 'isEqual'. If we already know that the pixel doesn't match across all the images, we can
+                        // bail out early and avoid actually doing the comparison with the other images.
+                        if (isEqual && (imgR === imgPixels[j][i + 0]) && (imgG === imgPixels[j][i + 1]) && (imgB === imgPixels[j][i + 2]) && (imgA === imgPixels[j][ + 3])) {
+                            // Pixel match, so move on to the next comparison
+                        } else {
+                            isEqual = false;
+                        }
+                    }
+
+                    // If the pixels all match, paint that pixel to the diff canvas, otherwise paint our "diff color"
+                    //if ((img1r === img2r) && (img1g === img2g) && (img1b === img2b) && (img1a === img2a)) {
+                    if (isEqual) {
+                        imgDiffData.data[i + 0] = imgR;
+                        imgDiffData.data[i + 1] = imgG;
+                        imgDiffData.data[i + 2] = imgB;
+                        imgDiffData.data[i + 3] = imgA;
                     } else {
                         imgDiffData.data[i + 0] = 255;
                         imgDiffData.data[i + 1] = 0;
@@ -181,7 +206,7 @@ var jsImageDiff = (function (document, window) {
                         diffPixelCount++;
                     }
                 } catch (err) {
-                    // We went out-of-bounds, so fill in with all red
+                    // We went out-of-bounds, so paint our "diff color"
                     imgDiffData.data[i + 0] = 255;
                     imgDiffData.data[i + 1] = 0;
                     imgDiffData.data[i + 2] = 0;

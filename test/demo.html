@@ -13,12 +13,14 @@
       <tbody>
         <tr><td id="img1-1"></td><td id="img2-1"></td><td id="img3-1"></td><td id="diffimg-1"></td><td><img src="diff-1-2.png" /></td><td id="perdiff-1"></td></tr>
         <tr><td id="img1-2"></td><td id="img2-2"></td><td id="img3-2"></td><td id="diffimg-2"></td><td><img src="diff-3-2.png" /></td><td id="perdiff-2"></td></tr>
+        <tr><td id="img1-3"></td><td id="img2-3"></td><td id="img3-3"></td><td id="diffimg-3"></td><td><img src="diff-1-2-4.png" /></td><td id="perdiff-3"></td></tr>
       </tbody>
     </table>
     <script>
       var img1URL = "test_img_1.png";
       var img2URL = "test_img_2.png";
       var img3URL = "test_img_3.png";
+      var img4URL = "test_img_4.png";
 
       var whenDone1 = function (results) {
         // Place the images in the table
@@ -36,8 +38,18 @@
         document.getElementById("perdiff-2").innerHTML = results.percentageImageDifferent + "%";
       };
 
+      var whenDone3 = function (results) {
+        // Place the images in the table
+        document.getElementById("img1-3").appendChild(results.sourceImages[0].getCtx().canvas);
+        document.getElementById("img2-3").appendChild(results.sourceImages[1].getCtx().canvas);
+        document.getElementById("img3-3").appendChild(results.sourceImages[2].getCtx().canvas);
+        document.getElementById("diffimg-3").appendChild(results.diffCanvas);
+        document.getElementById("perdiff-3").innerHTML = results.percentageImageDifferent + "%";
+      };
+
       jsImageDiff.diff({ imgs: [img1URL, img2URL], callback: whenDone1 });
       jsImageDiff.diff({ imgs: [img3URL, img2URL], callback: whenDone2 });
+      jsImageDiff.diff({ imgs: [img1URL, img2URL, img4URL], callback: whenDone3 });
     </script>
   </body>
 </html>
