@@ -3,7 +3,7 @@ jsImageDiff - An image diffing library using JavaScript and HTML5 Canvas
 
 What's it for?
 --------------
-jsImageDiff is a library for n-way image diffing. It's small, lightweight, fast, and has no additional libraries dependencies. jsImageDiff should work anywhere HTML5 Canvas does.
+jsImageDiff is a library for n-way image diffing. It's small, lightweight, fast, and has no additional library dependencies. jsImageDiff should work anywhere HTML5 Canvas does.
 
 How do I use it?
 ----------------
