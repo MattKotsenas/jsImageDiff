@@ -3,7 +3,7 @@ jsImageDiff - An image diffing library using JavaScript and HTML5 Canvas
 
 What's it for?
 --------------
-jsImageDiff is a client-side library for 2-way image diffing, with n-way support on the way. It's small, lightweight, fast, and has no dependencies on additional libraries. jsImageDiff should work anywhere HTML5 Canvas does.
+jsImageDiff is a client-side library for n-way image diffing. It's small, lightweight, fast, and has no dependencies on additional libraries. jsImageDiff should work anywhere HTML5 Canvas does.
 
 How do I use it?
 ----------------
@@ -18,7 +18,12 @@ Then pass an argument bag with two keys:
 1. _callback_ A callback function to execute when the diff is finished. This function will have access to the results of the diff.
 
 ```javascript
-jsImageDiff.diff({imgs: ["http://example.com/img1.jpg", document.getElementById("img2"), "http://example.com/img3.png"], callback: callbackFunction});
+jsImageDiff.diff(
+	{
+		imgs: ["http://example.com/img1.jpg", document.getElementById("img2"), "http://example.com/img3.png"],
+		callback: callbackFunction
+	}
+);
 ```
 
 jsImageDiff can take URLs or DOM references to images.
