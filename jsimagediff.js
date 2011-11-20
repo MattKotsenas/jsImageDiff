@@ -1,7 +1,7 @@
 //"use strict";
 
 /*
-Copyright (C) 2011 by Matt Kotsenas
+Copyright (C) 2011 by Matt Kotsenas -- MIT License
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -144,8 +144,6 @@ var jsImageDiff = (function (document, window) {
             var ctxDiff = canvasDiff.getContext("2d");
 
             // Get the pixel data for the images
-            //var img1Pixels = sourceImages[0].getImgData();
-            //var img2Pixels = sourceImages[1].getImgData();
             var imgPixels = [];
             sourceImages.forEach(function (img) { imgPixels.push(img.getImgData()); });
 
@@ -160,16 +158,6 @@ var jsImageDiff = (function (document, window) {
             // i += 4 because the pixel array splits each pixel into rgba, so i[0] = red, i[1] = green, i[2] = blue, and i[3] = alpha
             for (var i = 0; i < imgDiffPixels.length; i += 4) {
                 try {
-                    //                    var img1r = img1Pixels[i + 0];
-                    //                    var img1g = img1Pixels[i + 1];
-                    //                    var img1b = img1Pixels[i + 2];
-                    //                    var img1a = img1Pixels[i + 3];
-
-                    //                    var img2r = img2Pixels[i + 0];
-                    //                    var img2g = img2Pixels[i + 1];
-                    //                    var img2b = img2Pixels[i + 2];
-                    //                    var img2a = img2Pixels[i + 3];
-
                     var isEqual = true;
 
                     // We compare all the other images to the first image. Which image we pick is our "base" image doesn't matter
@@ -191,7 +179,6 @@ var jsImageDiff = (function (document, window) {
                     }
 
                     // If the pixels all match, paint that pixel to the diff canvas, otherwise paint our "diff color"
-                    //if ((img1r === img2r) && (img1g === img2g) && (img1b === img2b) && (img1a === img2a)) {
                     if (isEqual) {
                         imgDiffData.data[i + 0] = imgR;
                         imgDiffData.data[i + 1] = imgG;
