@@ -15,8 +15,9 @@ First, include the library in your page like this:
 
 Then pass an argument bag with two keys:
 
-1. **imgs** - An array of same-origin images.
+1. **imgs** - An array of same-origin images. Use either URLs or DOM references.
 1. **callback** - A callback function to execute when the diff is finished. This function will have access to the results of the diff.
+
 
 ```javascript
 jsImageDiff.diff(
@@ -26,8 +27,6 @@ jsImageDiff.diff(
 	}
 );
 ```
-
-jsImageDiff can take URLs or DOM references to images.
 
 When your callback is executed, it'll be passed a single object-literal with the following structure:
 
