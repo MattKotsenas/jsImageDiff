@@ -32,13 +32,13 @@ When your callback is executed, it'll be passed a single object-literal with the
 
 ```javascript
 {
-	sourceImages: [],              // Array of 'ImgWrappers' of the original images.
-	diffCanvas: <canvas>,          // Canvas object representing the diff of all the images.
-	                               // Any pixel that differs between any of the canvases is replaced with red (255,0,0).
-	totalPixels: <int>,            // Total number of pixels in the diff image.
-	                               // The diff image is the height of the tallest image and width of the widest image.
-	numPixelsDifferent: <int>,     // The number of pixels different (red) in the diff image
-	percentImageDifferent: <float> // (diffPixelCount / totalPixelCount) * 100
+	sourceCanvases: [<canvas>,<canvas>,...],    // Array of canvases of the original images.
+	diffCanvas: <canvas>,                       // Canvas object representing the diff of all the images.
+	                                            // Any pixel that differs between any of the canvases is replaced with red (255,0,0).
+	totalPixels: <int>,                         // Total number of pixels in the diff image.
+	                                            // The diff image is the height of the tallest image and width of the widest image.
+	numPixelsDifferent: <int>,                  // The number of pixels different (red) in the diff image
+	percentImageDifferent: <float>              // (diffPixelCount / totalPixelCount) * 100
 }
 ```
 

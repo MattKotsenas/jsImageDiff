@@ -16,7 +16,7 @@
         <tr><td id="img1-3"></td><td id="img2-3"></td><td id="img3-3"></td><td id="diffimg-3"></td><td><img src="diff-1-2-4.png" /></td><td id="perdiff-3"></td></tr>
       </tbody>
     </table>
-    <script>
+    <script type="text/javascript">
       var img1URL = "test_img_1.png";
       var img2URL = "test_img_2.png";
       var img3URL = "test_img_3.png";
@@ -24,25 +24,25 @@
 
       var whenDone1 = function (results) {
         // Place the images in the table
-        document.getElementById("img1-1").appendChild(results.sourceImages[0].getCtx().canvas);
-        document.getElementById("img2-1").appendChild(results.sourceImages[1].getCtx().canvas);
+        document.getElementById("img1-1").appendChild(results.sourceCanvases[0]);
+        document.getElementById("img2-1").appendChild(results.sourceCanvases[1]);
         document.getElementById("diffimg-1").appendChild(results.diffCanvas);
         document.getElementById("perdiff-1").innerHTML = results.percentageImageDifferent + "%";
       };
 
       var whenDone2 = function (results) {
         // Place the images in the table
-        document.getElementById("img1-2").appendChild(results.sourceImages[0].getCtx().canvas);
-        document.getElementById("img2-2").appendChild(results.sourceImages[1].getCtx().canvas);
+        document.getElementById("img1-2").appendChild(results.sourceCanvases[0]);
+        document.getElementById("img2-2").appendChild(results.sourceCanvases[1]);
         document.getElementById("diffimg-2").appendChild(results.diffCanvas);
         document.getElementById("perdiff-2").innerHTML = results.percentageImageDifferent + "%";
       };
 
       var whenDone3 = function (results) {
         // Place the images in the table
-        document.getElementById("img1-3").appendChild(results.sourceImages[0].getCtx().canvas);
-        document.getElementById("img2-3").appendChild(results.sourceImages[1].getCtx().canvas);
-        document.getElementById("img3-3").appendChild(results.sourceImages[2].getCtx().canvas);
+        document.getElementById("img1-3").appendChild(results.sourceCanvases[0]);
+        document.getElementById("img2-3").appendChild(results.sourceCanvases[1]);
+        document.getElementById("img3-3").appendChild(results.sourceCanvases[2]);
         document.getElementById("diffimg-3").appendChild(results.diffCanvas);
         document.getElementById("perdiff-3").innerHTML = results.percentageImageDifferent + "%";
       };

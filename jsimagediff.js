@@ -171,7 +171,7 @@ var jsImageDiff = (function (document, window) {
                     for (var j = 1; j < imgPixels.length; j++) {
                         // First check 'isEqual'. If we already know that the pixel doesn't match across all the images, we can
                         // bail out early and avoid actually doing the comparison with the other images.
-                        if (isEqual && (imgR === imgPixels[j][i + 0]) && (imgG === imgPixels[j][i + 1]) && (imgB === imgPixels[j][i + 2]) && (imgA === imgPixels[j][ + 3])) {
+                        if (isEqual && (imgR === imgPixels[j][i + 0]) && (imgG === imgPixels[j][i + 1]) && (imgB === imgPixels[j][i + 2]) && (imgA === imgPixels[j][i + 3])) {
                             // Pixel match, so move on to the next comparison
                         } else {
                             isEqual = false;
@@ -213,7 +213,10 @@ var jsImageDiff = (function (document, window) {
 
         var returnOutput = function () {
             var retVal = {};
-            retVal.sourceImages = sourceImages;
+
+            retVal.sourceCanvases = [];
+            sourceImages.forEach(function (img) { retVal.sourceCanvases.push(img.getCtx().canvas); });
+
             retVal.diffCanvas = canvasDiff;
             retVal.totalPixels = totalPixelCount;
             retVal.numPixelsDifferent = diffPixelCount;
