@@ -18,13 +18,13 @@ Then call .diff() with the two required arguments and an optional property bag:
 1. **imgs** - An array of same-origin images. Use either URLs or DOM references.
 1. **callback** - A callback function to execute when the diff is finished. This function will have access to the results of the diff.
 1. **options** - A property bag with settings to customize and extend jsImageDiff.
-    * **diffColor** - The color to use when a pixel is different. Defaults to solid red 'rgb(255,0,0)'. Currently only accepts CSS-style rgb syntax.
+	* **diffColor** - The color to use when a pixel is different. Defaults to solid red 'rgb(255,0,0)'. Currently only accepts CSS-style rgb syntax.
 
 
 ```javascript
 var images = ["http://example.com/img1.jpg", document.getElementById("img2"), "http://example.com/img3.png"];
 var callback = function (results) { ... };
-var options = { diffColor: "rgb(255,69,0)" };
+var options = { diffColor: "rgb(255,70,0)" };
 
 jsImageDiff.diff(images, callback, options);
 ```
@@ -35,7 +35,7 @@ When your callback is executed, it'll be passed a single object-literal with the
 {
 	sourceCanvases: [<canvas>,<canvas>,...], // Array of canvases of the original images.
 	diffCanvas: <canvas>,                    // Canvas object representing the diff of all the images.
-	                                         // Any pixel that differs between any of the canvases is replaced with **diffColor**.
+	                                         // Any pixel that differs between any of the canvases is replaced with diffColor.
 	totalPixels: <int>,                      // Total number of pixels in the diff image.
 	                                         // The image is the height of the tallest image and width of the widest.
 	numPixelsDifferent: <int>,               // The number of pixels different in the diff image.
