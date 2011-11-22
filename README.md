@@ -18,6 +18,7 @@ Then call .diff() with the two required arguments and an optional property bag:
 1. **imgs** - An array of same-origin images. Use either URLs or DOM references.
 1. **callback** - A callback function to execute when the diff is finished. This function will have access to the results of the diff.
 1. **options** - A property bag with settings to customize and extend jsImageDiff.
+
 	* **diffColor** - The color to use when a pixel is different. Defaults to solid red 'rgb(255,0,0)'. Currently only accepts CSS-style rgb syntax.
 
 
