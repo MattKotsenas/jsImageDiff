@@ -47,9 +47,9 @@
         document.getElementById("perdiff-3").innerHTML = results.percentageImageDifferent + "%";
       };
 
-      jsImageDiff.diff({ imgs: [img1URL, img2URL], callback: whenDone1 });
-      jsImageDiff.diff({ imgs: [img3URL, img2URL], callback: whenDone2 });
-      jsImageDiff.diff({ imgs: [img1URL, img2URL, img4URL], callback: whenDone3 });
+      jsImageDiff.diff([img1URL, img2URL], whenDone1);
+      jsImageDiff.diff([img3URL, img2URL], whenDone2, { diffColor: "rgb(50,205,50)" });
+      jsImageDiff.diff([img1URL, img2URL, img4URL], whenDone3);
     </script>
   </body>
 </html>

@@ -27,6 +27,33 @@ var jsImageDiff = (function (document, window) {
     var jsImageDiff = jsImageDiff || {};
 
     //
+    // colorHelper - Internal namespace that centralizes working with colors. Converts the different ways
+    // of specifying colors into rgba-syntax for use in the diffing algorithm.
+    //
+    var colorHelper = {};
+
+    // Lookup of the named colors specified in CSS3 (http://www.w3.org/TR/css3-color/#svg-color)
+    colorHelper.NAMED_COLORS = {};
+
+    colorHelper.rgbToRgba = function (arg) {
+        var regex = /rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/;
+
+        arg.match(regex);
+
+        var r = RegExp.$1;
+        var g = RegExp.$2;
+        var b = RegExp.$3;
+
+        return { "r": r, "g": g, "b": b, "a": 1 };
+    };
+
+    colorHelper.hexToRgba = function () { };
+    colorHelper.namedColorToRgba = function () { };
+    colorHelper.parseColor = function () { }; // This function will take a string, apply some heuristics to determine what the input format is, then apply one of the other transform functions.
+
+    //----- colorHelper -----
+
+    //
     // ImgWrapper - Async wrapper that holds a source image and calls the callback when the image is loaded.
     //
     var ImgWrapper = function (source, callback) {
@@ -92,13 +119,14 @@ var jsImageDiff = (function (document, window) {
     };
     //----- ImgWrapper -----
 
-    jsImageDiff.diff = function (args) {
+    jsImageDiff.diff = function (imgs, userCallback, userOptions) {
         var self = this;
         var sourceImages = [];
 
         var callback;
         var imgsResolvedCount;
         var totalImgs;
+        var diffColor;
 
         var ctxDiff;
         var totalPixelCount;
@@ -112,13 +140,13 @@ var jsImageDiff = (function (document, window) {
             }
         };
 
-        var parseArgs = function (args) {
-            callback = args.callback || (function () { }); // Set an empty callback function if one isn't supplied.
+        var parseArgs = function (imgs, userCallback, userOptions) {
+            callback = userCallback;
+            var options = userOptions || {}; // If options aren't specified, make a new empty object so we don't have check for 'undefined' for every property
 
             // Parse the source images; if they are <img> do nothing, otherwise put them in them.
-            if (args.imgs.length < 2) { throw "You must supply at least two images to compare."; }
-            var imgs = args.imgs;
-
+            if (imgs.length < 2) { throw "You must supply at least two images to compare."; }
+            
             imgsResolvedCount = 0;
             totalImgs = imgs.length;
 
@@ -126,6 +154,8 @@ var jsImageDiff = (function (document, window) {
                 sourceImages.push(new ImgWrapper(imgs[i], resolveImgs));
             }
 
+            var color = options.diffColor || "rgb(255,0,0)";
+            diffColor = colorHelper.rgbToRgba(color);
         };
 
         var diff2 = function () {
@@ -185,19 +215,19 @@ var jsImageDiff = (function (document, window) {
                         imgDiffData.data[i + 2] = imgB;
                         imgDiffData.data[i + 3] = imgA;
                     } else {
-                        imgDiffData.data[i + 0] = 255;
-                        imgDiffData.data[i + 1] = 0;
-                        imgDiffData.data[i + 2] = 0;
-                        imgDiffData.data[i + 3] = 0xff;
+                        imgDiffData.data[i + 0] = diffColor.r;
+                        imgDiffData.data[i + 1] = diffColor.g;
+                        imgDiffData.data[i + 2] = diffColor.b;
+                        imgDiffData.data[i + 3] = diffColor.a * 255; //rgba()-syntax specifies an alpha between 0-1 (inclusive), but canvas specifies each pixel between 0-255 (inclusive)
 
                         diffPixelCount++;
                     }
                 } catch (err) {
                     // We went out-of-bounds, so paint our "diff color"
-                    imgDiffData.data[i + 0] = 255;
-                    imgDiffData.data[i + 1] = 0;
-                    imgDiffData.data[i + 2] = 0;
-                    imgDiffData.data[i + 3] = 0xff;
+                    imgDiffData.data[i + 0] = diffColor.r;
+                    imgDiffData.data[i + 1] = diffColor.g;
+                    imgDiffData.data[i + 2] = diffColor.b;
+                    imgDiffData.data[i + 3] = diffColor.a * 255; //rgba()-syntax specifies an alpha between 0-1 (inclusive), but canvas specifies each pixel between 0-255 (inclusive)
 
                     diffPixelCount++;
                 }
@@ -209,7 +239,7 @@ var jsImageDiff = (function (document, window) {
             returnOutput();
         };
 
-        parseArgs(args);
+        parseArgs(imgs, userCallback, userOptions);
 
         var returnOutput = function () {
             var retVal = {};
