@@ -35,20 +35,33 @@ var jsImageDiff = (function (document, window) {
     // Lookup of the named colors specified in CSS3 (http://www.w3.org/TR/css3-color/#svg-color)
     colorHelper.NAMED_COLORS = {};
 
-    colorHelper.rgbToRgba = function (arg) {
+    colorHelper.parseRGB = function (arg) {
         var regex = /rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/;
 
         arg.match(regex);
 
-        var r = RegExp.$1;
-        var g = RegExp.$2;
-        var b = RegExp.$3;
+        var r = parseInt(RegExp.$1);
+        var g = parseInt(RegExp.$2);
+        var b = parseInt(RegExp.$3);
+
+        // Clamp illegal RGB values to the closest legal value
+        if (isNaN(r)) { r = 0; }
+        if (isNaN(g)) { g = 0; }
+        if (isNaN(b)) { b = 0; }
+
+        r = (r > 255) ? 255 : r;
+        g = (g > 255) ? 255 : g;
+        b = (b > 255) ? 255 : b;
+
+        r = (r < 0) ? 0 : r;
+        g = (g < 0) ? 0 : g;
+        b = (b < 0) ? 0 : b;
 
         return { "r": r, "g": g, "b": b, "a": 1 };
     };
 
-    // The format of an RGB value in hexadecimal notation is a '#' immediately followed by either three or six hexadecimal characters.
-    colorHelper.hexToRgba = function (arg) {
+    // The format of an RGB value in hexadecimal notation is a '#' immediately followed by either three or six hexadecimal characters. http://www.w3.org/TR/CSS2/syndata.html#color-units
+    colorHelper.parseHex = function (arg) {
         // The three-digit RGB notation (#rgb) is converted into six-digit form (#rrggbb) by replicating digits, not by adding zeros.
         // For example, #fb0 expands to #ffbb00.
         var hex3ToHex6 = function (hex3) {
@@ -78,10 +91,10 @@ var jsImageDiff = (function (document, window) {
             return { "r": r, "g": g, "b": b, "a": 1 };
         };
 
-        var regex = /^#([0-9a-fA-F]+)$/;
+        var regex = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
 
+        if (!regex.test(arg)) { throw "Invalid syntax for hex color: " + arg + "."; }
         arg.match(regex);
-
         var hex = RegExp.$1;
 
         if (hex.length === 3) { hex = hex3ToHex6(hex); }
@@ -89,8 +102,22 @@ var jsImageDiff = (function (document, window) {
         return hex6ToRgba(hex);
     };
 
-    colorHelper.namedColorToRgba = function () { };
-    colorHelper.parseColor = function () { }; // This function will take a string, apply some heuristics to determine what the input format is, then apply one of the other transform functions.
+    colorHelper.parseRGBA = function () { };
+    colorHelper.parseHSL = function () { };
+    colorHelper.parseHSLA = function () { };
+    colorHelper.parseNamedColor = function () { };
+
+    // This function takes a color string and applies heuristics to determine what the input format is, then applies one of the other transform functions.
+    colorHelper.parseColor = function (color) {
+        var regexRGB = /rgb\(/;
+        var regexRGBA = /rgba\(/;
+        var regexHex = /#/;
+
+        if (regexRGB.test(color)) { return colorHelper.parseRGB(color); }
+        if (regexRGBA.test(color)) { return colorHelper.parseRGBA(color); }
+        if (regexHex.test(color)) { return colorHelper.parseHex(color); }
+        throw "Could not parse color: " + color + ".";
+    };
 
     //----- colorHelper -----
 
@@ -196,7 +223,7 @@ var jsImageDiff = (function (document, window) {
             }
 
             var color = options.diffColor || "rgb(255,0,0)";
-            diffColor = colorHelper.rgbToRgba(color);
+            diffColor = colorHelper.parseColor(color);
         };
 
         var diff2 = function () {

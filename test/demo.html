@@ -13,7 +13,8 @@
       <tbody>
         <tr><td id="img1-1"></td><td id="img2-1"></td><td id="img3-1"></td><td id="diffimg-1"></td><td><img src="diff-1-2.png" /></td><td id="perdiff-1"></td></tr>
         <tr><td id="img1-2"></td><td id="img2-2"></td><td id="img3-2"></td><td id="diffimg-2"></td><td><img src="diff-3-2.png" /></td><td id="perdiff-2"></td></tr>
-        <tr><td id="img1-3"></td><td id="img2-3"></td><td id="img3-3"></td><td id="diffimg-3"></td><td><img src="diff-1-2-4.png" /></td><td id="perdiff-3"></td></tr>
+        <tr><td id="img1-3"></td><td id="img2-3"></td><td id="img3-3"></td><td id="diffimg-3"></td><td><img src="diff-3-2-2.png" /></td><td id="perdiff-3"></td></tr>
+        <tr><td id="img1-4"></td><td id="img2-4"></td><td id="img3-4"></td><td id="diffimg-4"></td><td><img src="diff-1-2-4.png" /></td><td id="perdiff-4"></td></tr>
       </tbody>
     </table>
     <script type="text/javascript">
@@ -42,15 +43,25 @@
         // Place the images in the table
         document.getElementById("img1-3").appendChild(results.sourceCanvases[0]);
         document.getElementById("img2-3").appendChild(results.sourceCanvases[1]);
-        document.getElementById("img3-3").appendChild(results.sourceCanvases[2]);
         document.getElementById("diffimg-3").appendChild(results.diffCanvas);
         document.getElementById("perdiff-3").innerHTML = results.percentageImageDifferent + "%";
       };
 
+      var whenDone4 = function (results) {
+        // Place the images in the table
+        document.getElementById("img1-4").appendChild(results.sourceCanvases[0]);
+        document.getElementById("img2-4").appendChild(results.sourceCanvases[1]);
+        document.getElementById("img3-4").appendChild(results.sourceCanvases[2]);
+        document.getElementById("diffimg-4").appendChild(results.diffCanvas);
+        document.getElementById("perdiff-4").innerHTML = results.percentageImageDifferent + "%";
+      };
+
+
+
       jsImageDiff.diff([img1URL, img2URL], whenDone1);
       jsImageDiff.diff([img3URL, img2URL], whenDone2, { diffColor: "rgb(50,205,50)" });
-      //jsImageDiff.diff([img3URL, img2URL], whenDone2, { diffColor: "#060" });
-      jsImageDiff.diff([img1URL, img2URL, img4URL], whenDone3);
+      jsImageDiff.diff([img3URL, img2URL], whenDone3, { diffColor: "#ff8c00" });
+      jsImageDiff.diff([img1URL, img2URL, img4URL], whenDone4);
     </script>
   </body>
 </html>
