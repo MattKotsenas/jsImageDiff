@@ -24,7 +24,7 @@ THE SOFTWARE.
 
 var jsImageDiff = (function (document, window) {
 
-    var jsImageDiff = jsImageDiff || {};
+    var jsImageDiff = window.jsImageDiff || {};
 
     //
     // colorHelper - Internal namespace that centralizes working with colors. Converts the different ways
@@ -40,9 +40,9 @@ var jsImageDiff = (function (document, window) {
 
         arg.match(regex);
 
-        var r = parseInt(RegExp.$1);
-        var g = parseInt(RegExp.$2);
-        var b = parseInt(RegExp.$3);
+        var r = parseInt(RegExp.$1, 10);
+        var g = parseInt(RegExp.$2, 10);
+        var b = parseInt(RegExp.$3, 10);
 
         // Clamp illegal RGB values to the closest legal value
         if (isNaN(r)) { r = 0; }
@@ -142,6 +142,14 @@ var jsImageDiff = (function (document, window) {
             return retVal;
         };
 
+        var createCanvas = function () {
+            var canvas = document.createElement("canvas");
+            canvas.width = img.naturalWidth;
+            canvas.height = img.naturalHeight;
+            ctx = canvas.getContext("2d");
+            ctx.drawImage(img, 0, 0);
+        };
+
         // Creates an <img> tag for the passed in image or URL. If the image is already a tag, make a new one.
         // We have to make a new tag because the image may not have finished loading yet, so if we go to check the width / height
         // we'll get 0. We could try to attach an onload handler to the already loading image, but that could create a
@@ -160,16 +168,9 @@ var jsImageDiff = (function (document, window) {
                 newImg.src = source;
                 img = newImg;
             } else {
-                // Couldn't match, just swallow the error for now
+                // Couldn't match
+                throw "Could not parse input image: " + source + ".";
             }
-        };
-
-        var createCanvas = function () {
-            var canvas = document.createElement("canvas");
-            canvas.width = img.naturalWidth;
-            canvas.height = img.naturalHeight;
-            ctx = canvas.getContext("2d");
-            ctx.drawImage(img, 0, 0);
         };
 
         var getCtx = function () {
@@ -188,7 +189,6 @@ var jsImageDiff = (function (document, window) {
     //----- ImgWrapper -----
 
     jsImageDiff.diff = function (imgs, userCallback, userOptions) {
-        var self = this;
         var sourceImages = [];
 
         var callback;
@@ -199,6 +199,104 @@ var jsImageDiff = (function (document, window) {
         var ctxDiff;
         var totalPixelCount;
         var diffPixelCount;
+
+        var returnOutput = function () {
+            var retVal = {};
+
+            retVal.sourceCanvases = [];
+            sourceImages.forEach(function (img) { retVal.sourceCanvases.push(img.getCtx().canvas); });
+
+            retVal.diffCanvas = ctxDiff.canvas;
+            retVal.totalPixels = totalPixelCount;
+            retVal.numPixelsDifferent = diffPixelCount;
+            retVal.percentageImageDifferent = (diffPixelCount / totalPixelCount) * 100;
+
+            // Return final results back to the original, user-supplied callback
+            callback(retVal);
+        };
+
+        var diff2 = function () {
+            //--- Remove img1 and img2 and fix newWidth/newHeight to accept 'n' images ---
+            // Get images
+            var img1 = sourceImages[0].getCtx();
+            var img2 = sourceImages[1].getCtx();
+
+            // Create diff canvas
+            var newWidth = (img1.canvas.width > img2.canvas.width) ? img1.canvas.width : img2.canvas.width;
+            var newHeight = (img1.canvas.height > img2.canvas.height) ? img1.canvas.height : img2.canvas.height;
+            //--- ---
+
+            var canvasDiff = document.createElement("canvas");
+            canvasDiff.width = newWidth;
+            canvasDiff.height = newHeight;
+            ctxDiff = canvasDiff.getContext("2d");
+
+            // Get the pixel data for the images
+            var imgPixels = [];
+            sourceImages.forEach(function (img) { imgPixels.push(img.getImgData()); });
+
+            var imgDiffData = ctxDiff.createImageData(ctxDiff.canvas.width, ctxDiff.canvas.height);
+            var imgDiffPixels = imgDiffData.data;
+
+            // Diff images; if source1 === source2, place into diff, otherwise, place RED
+            // var var 
+            diffPixelCount = 0;
+            totalPixelCount = imgDiffPixels.length / 4;
+
+            // i += 4 because the pixel array splits each pixel into rgba, so i[0] = red, i[1] = green, i[2] = blue, and i[3] = alpha
+            var i;
+            for (i = 0; i < imgDiffPixels.length; i += 4) {
+                try {
+                    var isEqual = true;
+
+                    // We compare all the other images to the first image. Which image we pick is our "base" image doesn't matter
+                    // because we require them ALL to be equal.
+                    var imgR = imgPixels[0][i];
+                    var imgG = imgPixels[0][i + 1];
+                    var imgB = imgPixels[0][i + 2];
+                    var imgA = imgPixels[0][i + 3];
+
+                    // Start 'j' at 1 because we're using 0 as our base, so we can safely skip comparing with ourselves.
+                    var j;
+                    for (j = 1; j < imgPixels.length; j++) {
+                        // First check 'isEqual'. If we already know that the pixel doesn't match across all the images, we can
+                        // bail out early and avoid actually doing the comparison with the other images.
+                        if (!(isEqual && (imgR === imgPixels[j][i]) && (imgG === imgPixels[j][i + 1]) && (imgB === imgPixels[j][i + 2]) && (imgA === imgPixels[j][i + 3]))) {
+                            // Pixels don't match
+                            isEqual = false;
+                        }
+                    }
+
+                    // If the pixels all match, paint that pixel to the diff canvas, otherwise paint our "diff color"
+                    if (isEqual) {
+                        imgDiffData.data[i]     = imgR;
+                        imgDiffData.data[i + 1] = imgG;
+                        imgDiffData.data[i + 2] = imgB;
+                        imgDiffData.data[i + 3] = imgA;
+                    } else {
+                        imgDiffData.data[i]     = diffColor.r;
+                        imgDiffData.data[i + 1] = diffColor.g;
+                        imgDiffData.data[i + 2] = diffColor.b;
+                        imgDiffData.data[i + 3] = diffColor.a * 255; //rgba()-syntax specifies an alpha between 0-1 (inclusive), but canvas specifies each pixel between 0-255 (inclusive)
+
+                        diffPixelCount++;
+                    }
+                } catch (err) {
+                    // We went out-of-bounds, so paint our "diff color"
+                    imgDiffData.data[i]     = diffColor.r;
+                    imgDiffData.data[i + 1] = diffColor.g;
+                    imgDiffData.data[i + 2] = diffColor.b;
+                    imgDiffData.data[i + 3] = diffColor.a * 255; //rgba()-syntax specifies an alpha between 0-1 (inclusive), but canvas specifies each pixel between 0-255 (inclusive)
+
+                    diffPixelCount++;
+                }
+            }
+
+            // Create diff image 
+            ctxDiff.putImageData(imgDiffData, 0, 0);
+
+            returnOutput();
+        };
 
         var resolveImgs = function () {
             imgsResolvedCount += 1;
@@ -218,7 +316,8 @@ var jsImageDiff = (function (document, window) {
             imgsResolvedCount = 0;
             totalImgs = imgs.length;
 
-            for (var i = 0; i < imgs.length; i++) {
+            var i;
+            for (i = 0; i < imgs.length; i++) {
                 sourceImages.push(new ImgWrapper(imgs[i], resolveImgs));
             }
 
@@ -226,103 +325,7 @@ var jsImageDiff = (function (document, window) {
             diffColor = colorHelper.parseColor(color);
         };
 
-        var diff2 = function () {
-            // Get images
-            var img1 = sourceImages[0].getCtx();
-            var img2 = sourceImages[1].getCtx();
-
-            // Create diff canvas
-            var newWidth = (img1.canvas.width > img2.canvas.width) ? img1.canvas.width : img2.canvas.width;
-            var newHeight = (img1.canvas.height > img2.canvas.height) ? img1.canvas.height : img2.canvas.height;
-
-            // var
-            canvasDiff = document.createElement("canvas");
-            canvasDiff.width = newWidth;
-            canvasDiff.height = newHeight;
-            var ctxDiff = canvasDiff.getContext("2d");
-
-            // Get the pixel data for the images
-            var imgPixels = [];
-            sourceImages.forEach(function (img) { imgPixels.push(img.getImgData()); });
-
-            var imgDiffData = ctxDiff.createImageData(ctxDiff.canvas.width, ctxDiff.canvas.height);
-            var imgDiffPixels = imgDiffData.data;
-
-            // Diff images; if source1 === source2, place into diff, otherwise, place RED
-            // var var 
-            diffPixelCount = 0;
-            totalPixelCount = imgDiffPixels.length / 4;
-
-            // i += 4 because the pixel array splits each pixel into rgba, so i[0] = red, i[1] = green, i[2] = blue, and i[3] = alpha
-            for (var i = 0; i < imgDiffPixels.length; i += 4) {
-                try {
-                    var isEqual = true;
-
-                    // We compare all the other images to the first image. Which image we pick is our "base" image doesn't matter
-                    // because we require them ALL to be equal.
-                    var imgR = imgPixels[0][i + 0];
-                    var imgG = imgPixels[0][i + 1];
-                    var imgB = imgPixels[0][i + 2];
-                    var imgA = imgPixels[0][i + 3];
-
-                    // Start 'j' at 1 because we're using 0 as our base, so we can safely skip comparing with ourselves.
-                    for (var j = 1; j < imgPixels.length; j++) {
-                        // First check 'isEqual'. If we already know that the pixel doesn't match across all the images, we can
-                        // bail out early and avoid actually doing the comparison with the other images.
-                        if (isEqual && (imgR === imgPixels[j][i + 0]) && (imgG === imgPixels[j][i + 1]) && (imgB === imgPixels[j][i + 2]) && (imgA === imgPixels[j][i + 3])) {
-                            // Pixel match, so move on to the next comparison
-                        } else {
-                            isEqual = false;
-                        }
-                    }
-
-                    // If the pixels all match, paint that pixel to the diff canvas, otherwise paint our "diff color"
-                    if (isEqual) {
-                        imgDiffData.data[i + 0] = imgR;
-                        imgDiffData.data[i + 1] = imgG;
-                        imgDiffData.data[i + 2] = imgB;
-                        imgDiffData.data[i + 3] = imgA;
-                    } else {
-                        imgDiffData.data[i + 0] = diffColor.r;
-                        imgDiffData.data[i + 1] = diffColor.g;
-                        imgDiffData.data[i + 2] = diffColor.b;
-                        imgDiffData.data[i + 3] = diffColor.a * 255; //rgba()-syntax specifies an alpha between 0-1 (inclusive), but canvas specifies each pixel between 0-255 (inclusive)
-
-                        diffPixelCount++;
-                    }
-                } catch (err) {
-                    // We went out-of-bounds, so paint our "diff color"
-                    imgDiffData.data[i + 0] = diffColor.r;
-                    imgDiffData.data[i + 1] = diffColor.g;
-                    imgDiffData.data[i + 2] = diffColor.b;
-                    imgDiffData.data[i + 3] = diffColor.a * 255; //rgba()-syntax specifies an alpha between 0-1 (inclusive), but canvas specifies each pixel between 0-255 (inclusive)
-
-                    diffPixelCount++;
-                }
-            }
-
-            // Create diff image 
-            ctxDiff.putImageData(imgDiffData, 0, 0);
-
-            returnOutput();
-        };
-
         parseArgs(imgs, userCallback, userOptions);
-
-        var returnOutput = function () {
-            var retVal = {};
-
-            retVal.sourceCanvases = [];
-            sourceImages.forEach(function (img) { retVal.sourceCanvases.push(img.getCtx().canvas); });
-
-            retVal.diffCanvas = canvasDiff;
-            retVal.totalPixels = totalPixelCount;
-            retVal.numPixelsDifferent = diffPixelCount;
-            retVal.percentageImageDifferent = (diffPixelCount / totalPixelCount) * 100;
-
-            // Return final results back to the original, user-supplied callback
-            callback(retVal);
-        }
     };
 
     return jsImageDiff;
