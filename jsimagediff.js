@@ -216,16 +216,13 @@ var jsImageDiff = (function (document, window) {
         };
 
         var diff2 = function () {
-            //--- Remove img1 and img2 and fix newWidth/newHeight to accept 'n' images ---
-            // Get images
-            var img1 = sourceImages[0].getCtx();
-            var img2 = sourceImages[1].getCtx();
+            var widths = [];
+            var heights = [];
+            sourceImages.forEach(function (x) { widths.push(x.getCtx().canvas.width); heights.push(x.getCtx().canvas.height); });
+            var newWidth = Math.max.apply(Math, widths);
+            var newHeight = Math.max.apply(Math, heights);
 
             // Create diff canvas
-            var newWidth = (img1.canvas.width > img2.canvas.width) ? img1.canvas.width : img2.canvas.width;
-            var newHeight = (img1.canvas.height > img2.canvas.height) ? img1.canvas.height : img2.canvas.height;
-            //--- ---
-
             var canvasDiff = document.createElement("canvas");
             canvasDiff.width = newWidth;
             canvasDiff.height = newHeight;
@@ -269,12 +266,12 @@ var jsImageDiff = (function (document, window) {
 
                     // If the pixels all match, paint that pixel to the diff canvas, otherwise paint our "diff color"
                     if (isEqual) {
-                        imgDiffData.data[i]     = imgR;
+                        imgDiffData.data[i] = imgR;
                         imgDiffData.data[i + 1] = imgG;
                         imgDiffData.data[i + 2] = imgB;
                         imgDiffData.data[i + 3] = imgA;
                     } else {
-                        imgDiffData.data[i]     = diffColor.r;
+                        imgDiffData.data[i] = diffColor.r;
                         imgDiffData.data[i + 1] = diffColor.g;
                         imgDiffData.data[i + 2] = diffColor.b;
                         imgDiffData.data[i + 3] = diffColor.a * 255; //rgba()-syntax specifies an alpha between 0-1 (inclusive), but canvas specifies each pixel between 0-255 (inclusive)
@@ -283,7 +280,7 @@ var jsImageDiff = (function (document, window) {
                     }
                 } catch (err) {
                     // We went out-of-bounds, so paint our "diff color"
-                    imgDiffData.data[i]     = diffColor.r;
+                    imgDiffData.data[i] = diffColor.r;
                     imgDiffData.data[i + 1] = diffColor.g;
                     imgDiffData.data[i + 2] = diffColor.b;
                     imgDiffData.data[i + 3] = diffColor.a * 255; //rgba()-syntax specifies an alpha between 0-1 (inclusive), but canvas specifies each pixel between 0-255 (inclusive)
