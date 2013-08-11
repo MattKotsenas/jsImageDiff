@@ -4,12 +4,24 @@
     <title>jsImageDiff Tests</title>
     <script type="text/javascript" src="..\jsimagediff.js"></script>
     <link rel="stylesheet" href="http://code.jquery.com/qunit/qunit-1.12.0.css" />
+    <style type="text/css">
+        .results {
+            border: 1px solid #eee;
+            margin-top: 10px;
+            border-collapse: collapse;
+            font-family: "Helvetica Neue Light", "HelveticaNeue-Light", "Helvetica Neue", Calibri, Helvetica, Arial, sans-serif;
+        }
+        .results td {
+            padding: 10px 5px 10px 5px;
+            min-width: 120px;
+        }
+    </style>
 </head>
 <body>
     <div id="qunit"></div>
     <div id="qunit-fixture"></div>
     <script type="text/javascript" src="http://code.jquery.com/qunit/qunit-1.12.0.js"></script>
-    <table border="1">
+    <table class="results">
         <thead>
             <tr>
                 <td>Image 1</td>
@@ -80,7 +92,7 @@
                 elem.querySelectorAll(".source-img")[index].appendChild(element);
             });
             elem.querySelector(".diff-actual").appendChild(results.diffCanvas);
-            elem.querySelector(".diff-percent").innerHTML = results.percentageImageDifferent + "%";
+            elem.querySelector(".diff-percent").innerHTML = results.percentageImageDifferent.toFixed(2) + "%";
         };
 
         asyncTest("Basic Test", 2, function () {
