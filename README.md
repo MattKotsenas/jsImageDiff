@@ -21,8 +21,6 @@ Then call .diff() with the two required arguments and an optional property bag:
 1. **callback** - A callback function to execute when the diff is finished. This function will have access to the results of the diff.
 1. **options** - A property bag with settings to customize and extend jsImageDiff.
 
-    * **diffColor** - The color to use when a pixel is different. Defaults to solid red. Currently accepts rgb() and hex (e.g. #ff8c00) syntax.
-
 
 ```javascript
 var images = ["http://example.com/img1.jpg", document.getElementById("img2"), "http://example.com/img3.png"];
@@ -55,8 +53,12 @@ When your callback is executed, it'll be passed a single object-literal with the
 }
 ```
 
+Options
+-------
+* **diffColor** - The color to use when a pixel is different. Defaults to solid red. Currently accepts rgb() and hex (e.g. #ff8c00) syntax.
+
 FAQ
 ---
 
 ### Why do I get an error like: SCRIPT5022: DOM Exception: SECURITY_ERR (18) (or something similar) ###
-jsImageDiff uses the `getImageData()` API in [canvas](http://www.w3.org/TR/html5/the-canvas-element.html#the-canvas-element "HTML5 canvas spec"). For [security reasons](http://www.w3.org/TR/html5/the-canvas-element.html#security-with-canvas-elements "Security with canvas elements"), canvas won't allow JavaScript to write a cross-domain image and read the pixel data back out. If you need to read cross-domain content, you'll have to do the usual tricks (e.g. server-side proxying). See [Stack Overflow](http://stackoverflow.com/questions/4672643/html5-canvas-getimagedata-and-same-origin-policy) for some additional info.
+jsImageDiff uses the `getImageData()` API in [canvas](http://www.w3.org/TR/html5/embedded-content-0.html#the-canvas-element "HTML5 canvas spec"). For [security reasons](http://www.w3.org/TR/html5/embedded-content-0.html#security-with-canvas-elements "Security with canvas elements"), canvas won't allow JavaScript to write a cross-domain image and read the pixel data back out. If you need to read cross-domain content, you'll have to do the usual tricks (e.g. server-side proxying). See [Stack Overflow](http://stackoverflow.com/questions/4672643/html5-canvas-getimagedata-and-same-origin-policy) for some additional info.
