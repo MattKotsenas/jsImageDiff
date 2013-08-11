@@ -1,6 +1,4 @@
-﻿//"use strict";
-
-/*
+﻿/*
 Copyright (C) 2011 by Matt Kotsenas -- MIT License
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -23,6 +21,7 @@ THE SOFTWARE.
 */
 
 var jsImageDiff = (function (document, window) {
+    "use strict";
 
     var jsImageDiff = window.jsImageDiff || {};
 
@@ -620,6 +619,19 @@ var jsImageDiff = (function (document, window) {
     };
     //----- ImgWrapper -----
 
+    var returnOutput = function (sourceImages, diffCanvas, totalPixelCount, diffPixelCount, callback) {
+        var retVal = {};
+
+        retVal.sourceCanvases = sourceImages.map(function (sourceImage) { return sourceImage.getCtx().canvas; });
+        retVal.diffCanvas = diffCanvas;
+        retVal.totalPixels = totalPixelCount;
+        retVal.numPixelsDifferent = diffPixelCount;
+        retVal.percentageImageDifferent = (diffPixelCount / totalPixelCount) * 100;
+
+        // Return final results back to the original, user-supplied callback
+        callback(retVal);
+    };
+
     jsImageDiff.diff = function (imgs, userCallback, userOptions) {
         var sourceImages = [];
 
@@ -628,41 +640,23 @@ var jsImageDiff = (function (document, window) {
         var totalImgs;
         var diffColor;
 
-        var ctxDiff;
         var totalPixelCount;
         var diffPixelCount;
 
-        var returnOutput = function () {
-            var retVal = {};
-
-            retVal.sourceCanvases = [];
-            sourceImages.forEach(function (img) { retVal.sourceCanvases.push(img.getCtx().canvas); });
-
-            retVal.diffCanvas = ctxDiff.canvas;
-            retVal.totalPixels = totalPixelCount;
-            retVal.numPixelsDifferent = diffPixelCount;
-            retVal.percentageImageDifferent = (diffPixelCount / totalPixelCount) * 100;
-
-            // Return final results back to the original, user-supplied callback
-            callback(retVal);
-        };
-
-        var diff2 = function () {
-            var widths = [];
-            var heights = [];
-            sourceImages.forEach(function (x) { widths.push(x.getCtx().canvas.width); heights.push(x.getCtx().canvas.height); });
-            var newWidth = Math.max.apply(Math, widths);
-            var newHeight = Math.max.apply(Math, heights);
-
+        var startDiff = function () {
             // Create diff canvas
-            var canvasDiff = document.createElement("canvas");
-            canvasDiff.width = newWidth;
-            canvasDiff.height = newHeight;
-            ctxDiff = canvasDiff.getContext("2d");
+            var ctxDiff = (function () {
+                var width = Math.max.apply(Math, sourceImages.map(function (sourceImage) { return sourceImage.getCtx().canvas.width; }));
+                var height = Math.max.apply(Math, sourceImages.map(function (sourceImage) { return sourceImage.getCtx().canvas.height; }));
+
+                var canvas = document.createElement("canvas");
+                canvas.width = width;
+                canvas.height = height;
+                return canvas.getContext("2d");
+            })();
 
             // Get the pixel data for the images
-            var imgPixels = [];
-            sourceImages.forEach(function (img) { imgPixels.push(img.getImgData()); });
+            var imgPixels = sourceImages.map(function (sourceImage) { return sourceImage.getImgData(); });
 
             var imgDiffData = ctxDiff.createImageData(ctxDiff.canvas.width, ctxDiff.canvas.height);
             var imgDiffPixels = imgDiffData.data;
@@ -698,24 +692,24 @@ var jsImageDiff = (function (document, window) {
 
                     // If the pixels all match, paint that pixel to the diff canvas, otherwise paint our "diff color"
                     if (isEqual) {
-                        imgDiffData.data[i] = imgR;
-                        imgDiffData.data[i + 1] = imgG;
-                        imgDiffData.data[i + 2] = imgB;
-                        imgDiffData.data[i + 3] = imgA;
+                        imgDiffPixels[i] = imgR;
+                        imgDiffPixels[i + 1] = imgG;
+                        imgDiffPixels[i + 2] = imgB;
+                        imgDiffPixels[i + 3] = imgA;
                     } else {
-                        imgDiffData.data[i] = diffColor.r;
-                        imgDiffData.data[i + 1] = diffColor.g;
-                        imgDiffData.data[i + 2] = diffColor.b;
-                        imgDiffData.data[i + 3] = diffColor.a * 255; //rgba()-syntax specifies an alpha between 0-1 (inclusive), but canvas specifies each pixel between 0-255 (inclusive)
+                        imgDiffPixels[i] = diffColor.r;
+                        imgDiffPixels[i + 1] = diffColor.g;
+                        imgDiffPixels[i + 2] = diffColor.b;
+                        imgDiffPixels[i + 3] = diffColor.a * 255; //rgba()-syntax specifies an alpha between 0-1 (inclusive), but canvas specifies each pixel between 0-255 (inclusive)
 
                         diffPixelCount++;
                     }
                 } catch (err) {
                     // We went out-of-bounds, so paint our "diff color"
-                    imgDiffData.data[i] = diffColor.r;
-                    imgDiffData.data[i + 1] = diffColor.g;
-                    imgDiffData.data[i + 2] = diffColor.b;
-                    imgDiffData.data[i + 3] = diffColor.a * 255; //rgba()-syntax specifies an alpha between 0-1 (inclusive), but canvas specifies each pixel between 0-255 (inclusive)
+                    imgDiffPixels[i] = diffColor.r;
+                    imgDiffPixels[i + 1] = diffColor.g;
+                    imgDiffPixels[i + 2] = diffColor.b;
+                    imgDiffPixels[i + 3] = diffColor.a * 255; //rgba()-syntax specifies an alpha between 0-1 (inclusive), but canvas specifies each pixel between 0-255 (inclusive)
 
                     diffPixelCount++;
                 }
@@ -724,14 +718,14 @@ var jsImageDiff = (function (document, window) {
             // Create diff image 
             ctxDiff.putImageData(imgDiffData, 0, 0);
 
-            returnOutput();
+            returnOutput(sourceImages, ctxDiff.canvas, totalPixelCount, diffPixelCount, callback);
         };
 
         var resolveImgs = function () {
             imgsResolvedCount += 1;
 
             if (imgsResolvedCount === totalImgs) {
-                diff2();
+                startDiff();
             }
         };
 
