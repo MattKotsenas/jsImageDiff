@@ -57,6 +57,7 @@ Options
 -------
 * **diffColor** - The color to use when a pixel is different. Defaults to solid red. Currently accepts rgb() and hex (e.g. #ff8c00) syntax.
 * **useGrayScale** - This will convert the diff canvas to grayscale and place your diffColor on top of that instead of the original.
+* **returnImage** - This tells jsDiff to return a PNG file instead of the canvas itself
 
 FAQ
 ---
