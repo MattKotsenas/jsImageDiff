@@ -619,11 +619,11 @@ var jsImageDiff = (function (document, window) {
     };
     //----- ImgWrapper -----
 
-    var returnOutput = function (sourceImages, diffCanvas, totalPixelCount, diffPixelCount, callback) {
+    var returnOutput = function (sourceImages, diffReturnElement, totalPixelCount, diffPixelCount, callback) {
         var retVal = {};
 
         retVal.sourceCanvases = sourceImages.map(function (sourceImage) { return sourceImage.getCtx().canvas; });
-        retVal.diffCanvas = diffCanvas;
+        retVal.diffResult = diffReturnElement;
         retVal.totalPixels = totalPixelCount;
         retVal.numPixelsDifferent = diffPixelCount;
         retVal.percentageImageDifferent = (diffPixelCount / totalPixelCount) * 100;
@@ -642,6 +642,8 @@ var jsImageDiff = (function (document, window) {
 
         var totalPixelCount;
         var diffPixelCount;
+        var useGrayScale;
+        var returnImage;
 
         var startDiff = function () {
             // Create diff canvas
@@ -692,10 +694,19 @@ var jsImageDiff = (function (document, window) {
 
                     // If the pixels all match, paint that pixel to the diff canvas, otherwise paint our "diff color"
                     if (isEqual) {
-                        imgDiffPixels[i] = imgR;
-                        imgDiffPixels[i + 1] = imgG;
-                        imgDiffPixels[i + 2] = imgB;
-                        imgDiffPixels[i + 3] = imgA;
+                        if (useGrayScale) {
+                            var average = (imgR + imgG + imgB) / 3;
+                            imgDiffData.data[i] = average;
+                            imgDiffData.data[i + 1] = average;
+                            imgDiffData.data[i + 2] = average;
+                            imgDiffData.data[i + 3] = imgA;
+                        }
+                        else {
+                            imgDiffData.data[i] = imgR;
+                            imgDiffData.data[i + 1] = imgG;
+                            imgDiffData.data[i + 2] = imgB;
+                            imgDiffData.data[i + 3] = imgA;
+                        }
                     } else {
                         imgDiffPixels[i] = diffColor.r;
                         imgDiffPixels[i + 1] = diffColor.g;
@@ -718,7 +729,17 @@ var jsImageDiff = (function (document, window) {
             // Create diff image 
             ctxDiff.putImageData(imgDiffData, 0, 0);
 
-            returnOutput(sourceImages, ctxDiff.canvas, totalPixelCount, diffPixelCount, callback);
+            var returnElement;
+
+            // Return image if requested or return the canvas if not
+            if (returnImage) {
+                var returnElement = ctxDiff.canvas.toDataURL();
+            }
+            else {
+                var returnElement = ctxDiff.canvas;
+            }
+
+            returnOutput(sourceImages, returnElement, totalPixelCount, diffPixelCount, callback);
         };
 
         var resolveImgs = function () {
@@ -746,6 +767,8 @@ var jsImageDiff = (function (document, window) {
 
             var color = options.diffColor || "rgb(255,0,0)";
             diffColor = swatch.parse(color);
+            useGrayScale = options.useGrayScale || false;
+            returnImage = options.returnImage || false;
         };
 
         parseArgs(imgs, userCallback, userOptions);
