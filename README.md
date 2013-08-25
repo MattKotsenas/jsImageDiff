@@ -56,6 +56,7 @@ When your callback is executed, it'll be passed a single object-literal with the
 Options
 -------
 * **diffColor** - The color to use when a pixel is different. Defaults to solid red. Currently accepts rgb() and hex (e.g. #ff8c00) syntax.
+* **grayscale** - If **true** the diff canvas is converted to grayscale before applying the ```diffColor```. Default is **false**.
 
 FAQ
 ---

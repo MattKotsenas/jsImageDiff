@@ -63,6 +63,16 @@
                 </td>
                 <td class="diff-percent"></td>
             </tr>
+            <tr id="grayscale">
+                <td class="source-img"></td>
+                <td class="source-img"></td>
+                <td class="source-img"></td>
+                <td class="diff-actual"></td>
+                <td class="diff-expected">
+                    <img src="diff-3-2-grayscale.png" />
+                </td>
+                <td class="diff-percent"></td>
+            </tr>
             <tr id="three-way-diff">
                 <td class="source-img"></td>
                 <td class="source-img"></td>
@@ -107,10 +117,10 @@
 
                 //equal(expectedImage, actualImage);
                 equal(expectedDiff, actualDiff);
+                start();
             };
 
             jsImageDiff.diff([img1URL, img2URL], callback);
-            start();
         });
 
         asyncTest("RGB diff color", 1, function () {
@@ -125,10 +135,10 @@
 
                 //equal(expectedImage, actualImage);
                 equal(expectedDiff, actualDiff);
+                start();
             };
 
             jsImageDiff.diff([img3URL, img2URL], callback, { diffColor: "rgb(50,205,50)" });
-            start();
         });
 
         asyncTest("Hex diff color", 1, function () {
@@ -143,10 +153,27 @@
 
                 //equal(expectedImage, actualImage);
                 equal(expectedDiff, actualDiff);
+                start();
             };
 
             jsImageDiff.diff([img3URL, img2URL], callback, { diffColor: "#ff8c00" });
-            start();
+        });
+
+        asyncTest("Grayscale", 1, function () {
+            var callback = function (results) {
+                populateTable("#grayscale", results);
+
+                var expectedDiff = 48.001508295625946;
+
+                var actualImage = results.diffCanvas.toDataURL();
+                var actualDiff = results.percentageImageDifferent;
+
+                //equal(expectedImage, actualImage);
+                equal(expectedDiff, actualDiff);
+                start();
+            };
+
+            jsImageDiff.diff([img3URL, img2URL], callback, { diffColor: "#ff8c00", grayscale: true });
         });
 
         asyncTest("Three-way diff", 1, function () {
@@ -161,10 +188,10 @@
 
                 //equal(expectedImage, actualImage);
                 equal(expectedDiff, actualDiff);
+                start();
             };
 
             jsImageDiff.diff([img1URL, img2URL, img4URL], callback);
-            start();
         });
     </script>
 </body>

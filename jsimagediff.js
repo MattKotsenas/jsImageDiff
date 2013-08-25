@@ -637,6 +637,7 @@ var jsImageDiff = (function (document, window) {
 
         originalOptions = originalOptions || {}; // If options aren't specified, make a new empty object so we don't have check for 'undefined' for every property
         options.diffColor = swatch.parse(originalOptions.diffColor || "rgb(255,0,0)");
+        options.grayscale = !!originalOptions.grayscale;
         return options;
     }
 
@@ -700,10 +701,17 @@ var jsImageDiff = (function (document, window) {
 
                     // If the pixels all match, paint that pixel to the diff canvas, otherwise paint our "diff color"
                     if (isEqual) {
-                        imgDiffPixels[i] = imgR;
-                        imgDiffPixels[i + 1] = imgG;
-                        imgDiffPixels[i + 2] = imgB;
-                        imgDiffPixels[i + 3] = imgA;
+                        if (options.grayscale) {
+                            imgDiffPixels[i] = (imgR + imgG + imgB) / 3;
+                            imgDiffPixels[i + 1] = (imgR + imgG + imgB) / 3;
+                            imgDiffPixels[i + 2] = (imgR + imgG + imgB) / 3;
+                            imgDiffPixels[i + 3] = imgA;
+                        } else {
+                            imgDiffPixels[i] = imgR;
+                            imgDiffPixels[i + 1] = imgG;
+                            imgDiffPixels[i + 2] = imgB;
+                            imgDiffPixels[i + 3] = imgA;
+                        }
                     } else {
                         imgDiffPixels[i] = options.diffColor.r;
                         imgDiffPixels[i + 1] = options.diffColor.g;
