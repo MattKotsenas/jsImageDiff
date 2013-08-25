@@ -632,13 +632,21 @@ var jsImageDiff = (function (document, window) {
         callback(retVal);
     };
 
+    var normalizeOptions = function (originalOptions) {
+        var options = {};
+
+        originalOptions = originalOptions || {}; // If options aren't specified, make a new empty object so we don't have check for 'undefined' for every property
+        options.diffColor = swatch.parse(originalOptions.diffColor || "rgb(255,0,0)");
+        return options;
+    }
+
     jsImageDiff.diff = function (imgs, userCallback, userOptions) {
         var sourceImages = [];
 
         var callback;
         var imgsResolvedCount;
         var totalImgs;
-        var diffColor;
+        var options;
 
         var totalPixelCount;
         var diffPixelCount;
@@ -697,19 +705,19 @@ var jsImageDiff = (function (document, window) {
                         imgDiffPixels[i + 2] = imgB;
                         imgDiffPixels[i + 3] = imgA;
                     } else {
-                        imgDiffPixels[i] = diffColor.r;
-                        imgDiffPixels[i + 1] = diffColor.g;
-                        imgDiffPixels[i + 2] = diffColor.b;
-                        imgDiffPixels[i + 3] = diffColor.a * 255; //rgba()-syntax specifies an alpha between 0-1 (inclusive), but canvas specifies each pixel between 0-255 (inclusive)
+                        imgDiffPixels[i] = options.diffColor.r;
+                        imgDiffPixels[i + 1] = options.diffColor.g;
+                        imgDiffPixels[i + 2] = options.diffColor.b;
+                        imgDiffPixels[i + 3] = options.diffColor.a * 255; //rgba()-syntax specifies an alpha between 0-1 (inclusive), but canvas specifies each pixel between 0-255 (inclusive)
 
                         diffPixelCount++;
                     }
                 } catch (err) {
                     // We went out-of-bounds, so paint our "diff color"
-                    imgDiffPixels[i] = diffColor.r;
-                    imgDiffPixels[i + 1] = diffColor.g;
-                    imgDiffPixels[i + 2] = diffColor.b;
-                    imgDiffPixels[i + 3] = diffColor.a * 255; //rgba()-syntax specifies an alpha between 0-1 (inclusive), but canvas specifies each pixel between 0-255 (inclusive)
+                    imgDiffPixels[i] = options.diffColor.r;
+                    imgDiffPixels[i + 1] = options.diffColor.g;
+                    imgDiffPixels[i + 2] = options.diffColor.b;
+                    imgDiffPixels[i + 3] = options.diffColor.a * 255; //rgba()-syntax specifies an alpha between 0-1 (inclusive), but canvas specifies each pixel between 0-255 (inclusive)
 
                     diffPixelCount++;
                 }
@@ -729,9 +737,8 @@ var jsImageDiff = (function (document, window) {
             }
         };
 
-        var parseArgs = function (imgs, userCallback, userOptions) {
+        var parseArgs = function (imgs, userCallback) {
             callback = userCallback;
-            var options = userOptions || {}; // If options aren't specified, make a new empty object so we don't have check for 'undefined' for every property
 
             // Parse the source images; if they are <img> do nothing, otherwise put them in them.
             if (imgs.length < 2) { throw "You must supply at least two images to compare."; }
@@ -743,12 +750,10 @@ var jsImageDiff = (function (document, window) {
             for (i = 0; i < imgs.length; i++) {
                 sourceImages.push(new ImgWrapper(imgs[i], resolveImgs));
             }
-
-            var color = options.diffColor || "rgb(255,0,0)";
-            diffColor = swatch.parse(color);
         };
 
-        parseArgs(imgs, userCallback, userOptions);
+        options = normalizeOptions(userOptions);
+        parseArgs(imgs, userCallback);
     };
 
     return jsImageDiff;
